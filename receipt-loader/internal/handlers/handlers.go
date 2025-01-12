@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
@@ -64,7 +65,24 @@ func AddReceipt(c *gin.Context, db *gorm.DB) {
 
 // GetReceiptByID возвращает чек по его ID
 func GetReceiptByID(c *gin.Context, db *gorm.DB) {
+	id := c.Param("id")
+	var receipt models.Receipt
 
+	// Поиск чека по ID
+	if err := db.First(&receipt, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Receipt not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to retrieve receipt",
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, receipt)
 }
 
 // SetupRoutes инициализирует маршруты API
