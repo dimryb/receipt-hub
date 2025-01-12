@@ -10,6 +10,17 @@ import (
 )
 
 // AddReceipt сохраняет данные о чеке
+// @Summary Add a new receipt
+// @Description Save a new receipt in the database. If a duplicate receipt exists, returns a conflict error.
+// @Tags Receipts
+// @Accept json
+// @Produce json
+// @Param receipt body models.Receipt true "Receipt details"
+// @Success 201 {object} models.SuccessResponse
+// @Failure 400 {object} models.ErrorResponse "Некорректный запрос"
+// @Failure 409 {object} models.ErrorResponse "Чек уже существует"
+// @Failure 500 {object} models.ErrorResponse "Ошибка сервера"
+// @Router /receipts [post]
 func AddReceipt(c *gin.Context, db *gorm.DB) {
 	var receipt models.Receipt
 
@@ -64,6 +75,16 @@ func AddReceipt(c *gin.Context, db *gorm.DB) {
 }
 
 // GetReceiptByID возвращает чек по его ID
+// @Summary Get receipt by ID
+// @Description Retrieve a receipt by its unique ID.
+// @Tags Receipts
+// @Accept json
+// @Produce json
+// @Param id path string true "Receipt ID"
+// @Success 200 {object} models.Receipt
+// @Failure 404 {object} models.ErrorResponse "Чек не найден"
+// @Failure 500 {object} models.ErrorResponse "Ошибка сервера"
+// @Router /receipts/{id} [get]
 func GetReceiptByID(c *gin.Context, db *gorm.DB) {
 	id := c.Param("id")
 	var receipt models.Receipt
@@ -86,6 +107,11 @@ func GetReceiptByID(c *gin.Context, db *gorm.DB) {
 }
 
 // SetupRoutes инициализирует маршруты API
+// @Summary Initialize routes for receipts API
+// @Description Setup all routes for handling receipts API requests.
+// @Tags Receipts
+// @Router /receipts [post]
+// @Router /receipts/{id} [get]
 func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	router.POST("/receipts", func(c *gin.Context) {
 		AddReceipt(c, db)

@@ -13,3 +13,15 @@ type Receipt struct {
 	FiscalSign     int64     `json:"fiscal_sign" binding:"required"`
 	CreatedAt      time.Time `json:"created_at,omitempty"`
 }
+
+// ErrorResponse структура для ошибок
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Details string `json:"details,omitempty"`
+}
+
+// SuccessResponse структура для успешных ответов
+type SuccessResponse struct {
+	Message string `json:"message"`
+	ID      uint   `json:"id"`
+}
