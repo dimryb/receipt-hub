@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// Подключение к БД
-	dsn := "postgres://postgres@localhost:5432/go_dev"
+	dsn := "postgres://postgres@localhost:5432/receipts"
 	database := db.Connect(dsn)
 
 	// Инициализация роутера
