@@ -107,11 +107,6 @@ func GetReceiptByID(c *gin.Context, db *gorm.DB) {
 }
 
 // SetupRoutes инициализирует маршруты API
-// @Summary Initialize routes for receipts API
-// @Description Setup all routes for handling receipts API requests.
-// @Tags Receipts
-// @Router /receipts [post]
-// @Router /receipts/{id} [get]
 func SetupRoutes(router *gin.Engine, db *gorm.DB) {
 	router.POST("/receipts", func(c *gin.Context) {
 		AddReceipt(c, db)
