@@ -14,7 +14,7 @@ import (
 // AddReceipt сохраняет данные о чеке
 // @Summary Add a new receipt
 // @Description Save a new receipt in the database. If a duplicate receipt exists, returns a conflict error.
-// @Tags Receipts
+// @Tags Receipt
 // @Accept json
 // @Produce json
 // @Param receipt body models.Receipt true "Receipt details"
@@ -22,7 +22,7 @@ import (
 // @Failure 400 {object} models.ErrorResponse "Некорректный запрос"
 // @Failure 409 {object} models.ErrorResponse "Чек уже существует"
 // @Failure 500 {object} models.ErrorResponse "Ошибка сервера"
-// @Router /receipts [post]
+// @Router /receipt [post]
 func AddReceipt(db *gorm.DB) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var receipt models.Receipt
@@ -71,14 +71,14 @@ func AddReceipt(db *gorm.DB) http.HandlerFunc {
 // GetReceiptByID возвращает чек по его Id
 // @Summary Get receipt by Id
 // @Description Retrieve a receipt by its unique Id.
-// @Tags Receipts
+// @Tags Receipt
 // @Accept json
 // @Produce json
 // @Param id path string true "Receipt Id"
 // @Success 200 {object} models.Receipt
 // @Failure 404 {object} models.ErrorResponse "Чек не найден"
 // @Failure 500 {object} models.ErrorResponse "Ошибка сервера"
-// @Router /receipts/{id} [get]
+// @Router /receipt/{id} [get]
 func GetReceiptByID(db *gorm.DB) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

@@ -46,8 +46,8 @@ func (app *App) Setup() error {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc(`/receipts/{id:\d+}`, handlers.GetReceiptByID(db)).Methods("GET")
-	r.HandleFunc(`/receipts`, handlers.AddReceipt(db)).Methods("POST")
+	r.HandleFunc(`/receipt/{id:\d+}`, handlers.GetReceiptByID(db)).Methods("GET")
+	r.HandleFunc(`/receipt`, handlers.AddReceipt(db)).Methods("POST")
 
 	app.Router = r
 	app.DB = db
