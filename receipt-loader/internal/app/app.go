@@ -4,10 +4,11 @@ import (
 	"errors"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
 	"os"
+	"receipt-loader/internal/db"
 	"receipt-loader/internal/handlers"
 )
 
@@ -40,18 +41,20 @@ func NewApp() App {
 }
 
 func (app *App) Setup() error {
-	db, err := gorm.Open(postgres.Open(app.Config.DatabaseUrl), &gorm.Config{})
+	//db, err := gorm.Open(postgres.Open(app.Config.DatabaseUrl), &gorm.Config{})
+	dataBase, err := db.Connect(app.Config.DatabaseUrl)
 	if err != nil {
-		return err
+		log.Fatalf("Error connecting to database: %v", err)
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc(`/receipt/{id:\d+}`, handlers.GetReceiptByID(db)).Methods("GET")
-	r.HandleFunc(`/receipt`, handlers.AddReceipt(db)).Methods("POST")
+	r.Use(Middleware)
+	r.HandleFunc(`/receipt/{id:\d+}`, handlers.GetReceiptByID(dataBase)).Methods("GET")
+	r.HandleFunc(`/receipt`, handlers.AddReceipt(dataBase)).Methods("POST")
 	r.HandleFunc(`/ping`, handlers.Ping)
 
 	app.Router = r
-	app.DB = db
+	app.DB = dataBase
 
 	return nil
 }
@@ -66,4 +69,13 @@ func (app *App) Teardown() error {
 
 func (app *App) Run() error {
 	return http.ListenAndServe(":8080", app.Router)
+}
+
+func Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if w.Header().Get("Content-Type") == "" {
+			w.Header().Set("Content-Type", "application/json")
+		}
+		next.ServeHTTP(w, r)
+	})
 }

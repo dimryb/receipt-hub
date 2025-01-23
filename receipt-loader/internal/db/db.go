@@ -1,47 +1,81 @@
 package db
 
 import (
-	"github.com/pressly/goose"
+	"errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"io/ioutil"
 	"log"
+	"path/filepath"
+	"receipt-loader/internal/utils"
+	"sort"
+	"strings"
 )
 
 // Connect устанавливает соединение с базой данных и возвращает экземпляр *gorm.DB
-func Connect(dsn string) *gorm.DB {
-	// Подключение к базе данных
+func Connect(dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		return nil, errors.New("failed to connect to database: " + err.Error())
 	}
 
-	err = runSqlMigrations(db)
-	if err != nil {
-		log.Fatalf("Failed to run SQL migration: %v", err)
+	if err := MigrateUp(db); err != nil {
+		return nil, errors.New("failed to run SQL migration: " + err.Error())
 	}
 
 	log.Println("Database connection established successfully")
-	return db
+	return db, nil
 }
 
-func runSqlMigrations(db *gorm.DB) error {
-	// Получаем объект sql.DB для работы с миграциями через goose
-	sqlDB, err := db.DB()
+func MigrateUp(db *gorm.DB) error {
+	pattern := filepath.Join(utils.GetProjectRoot(), "internal", "migrations", "*.up.sql")
+	sql, err := ConcatMigrations(pattern)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	// Устанавливаем диалект для goose
-	if err := goose.SetDialect("postgres"); err != nil {
-		panic(err)
+	err = db.Exec(sql).Error
+	if err != nil {
+		MigrateDown(db)
+		err = db.Exec(sql).Error
+		if err != nil {
+			return err
+		}
 	}
 
-	// Выполняем миграции из папки migrations
-	migrationsDir := "internal/migrations" // Путь к папке с миграциями
-	if err := goose.Up(sqlDB, migrationsDir); err != nil {
-		log.Fatalf("Failed to apply migrations: %v", err)
-	}
-
-	log.Println("Migrations applied successfully!")
 	return nil
+}
+
+func MigrateDown(db *gorm.DB) error {
+	pattern := filepath.Join(utils.GetProjectRoot(), "internal", "migrations", "*.down.sql")
+	sql, err := ConcatMigrations(pattern)
+	if err != nil {
+		return err
+	}
+
+	err = db.Exec(sql).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ConcatMigrations(pattern string) (string, error) {
+	filenames, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", err
+	}
+
+	sort.Strings(filenames)
+
+	var contents []string
+	for _, filename := range filenames {
+		bytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return "", err
+		}
+		contents = append(contents, string(bytes))
+	}
+	return strings.Join(contents, "\n\n"), nil
 }
