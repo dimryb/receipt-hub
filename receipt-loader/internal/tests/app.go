@@ -2,7 +2,6 @@ package tests
 
 import (
 	"github.com/stretchr/testify/require"
-	"log"
 	"path/filepath"
 	"receipt-loader/internal/app"
 	"receipt-loader/internal/db"
@@ -11,7 +10,6 @@ import (
 )
 
 func AppSetup(t *testing.T) *app.App {
-	t.Log("Starting AppSetup")
 	app := app.NewApp()
 
 	configPath := filepath.Join(utils.GetProjectRoot(), ".env.test")
@@ -28,13 +26,10 @@ func AppSetup(t *testing.T) *app.App {
 	require.Nil(t, err)
 
 	db.MigrateUp(app.DB)
-	t.Log("App setup complete")
 	return &app
 }
 
 func AppTeardown(app *app.App) {
-	log.Println("Starting AppTeardown")
 	db.MigrateDown(app.DB)
 	app.Teardown()
-	log.Println("App teardown complete")
 }
