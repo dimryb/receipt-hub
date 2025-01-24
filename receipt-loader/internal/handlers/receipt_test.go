@@ -46,3 +46,50 @@ func TestAddReceipt_Success(t *testing.T) {
 		).
 		End()
 }
+
+func TestAddReceipt_Duplicate(t *testing.T) {
+	t.Log("TestAddReceipt_Duplicate started")
+	defer t.Log("TestAddReceipt_Duplicate ended")
+	app := tests.AppSetup(t)
+	defer tests.AppTeardown(app)
+
+	// Добавляем первый чек
+	testTime := time.Now()
+	receipt := models.Receipt{
+		FiscalNumber:   123456789,
+		FiscalDocument: 987654321,
+		FiscalSign:     111222333,
+		Date:           testTime.Format("2006-01-02"),
+		Time:           testTime.Format("15:04:05"),
+		Amount:         2,
+	}
+
+	receiptJSON, err := json.Marshal(receipt)
+	assert.Nil(t, err)
+
+	// Создаем первый чек
+	apitest.
+		Handler(app.Router).
+		Post("/receipt").
+		JSON(receiptJSON).
+		Expect(t).
+		Status(http.StatusCreated).
+		End()
+
+	// Пытаемся добавить дубликат
+	apitest.
+		Handler(app.Router).
+		Post("/receipt").
+		JSON(receiptJSON).
+		Expect(t).
+		Status(http.StatusConflict).
+		Header("Content-Type", "application/json").
+		Assert(
+			jsonpath.Chain().
+				Equal("ok", false).
+				Equal("error", "Receipt already exists").
+				NotEqual("result", nil).
+				End(),
+		).
+		End()
+}
