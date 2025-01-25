@@ -10,6 +10,7 @@ import (
 	"os"
 	"receipt-loader/internal/db"
 	"receipt-loader/internal/handlers"
+	"receipt-loader/internal/rest"
 )
 
 type App struct {
@@ -52,6 +53,11 @@ func (app *App) Setup() error {
 	r.HandleFunc(`/receipt/{id:\d+}`, handlers.GetReceiptByID(dataBase)).Methods("GET")
 	r.HandleFunc(`/receipt`, handlers.AddReceipt(dataBase)).Methods("POST")
 	r.HandleFunc(`/ping`, handlers.Ping)
+
+	// Добавляем обработчик для 404 Not Found
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rest.WriteError(w, http.StatusNotFound, errors.New("not found"))
+	})
 
 	app.Router = r
 	app.DB = dataBase

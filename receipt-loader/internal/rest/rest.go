@@ -18,8 +18,11 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 }
 
 func WriteError(w http.ResponseWriter, status int, err error) {
-	WriteJSON(w, status, Response{
-		Ok:    false,
-		Error: err.Error(),
-	})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	response := map[string]interface{}{
+		"ok":    false,
+		"error": err.Error(),
+	}
+	json.NewEncoder(w).Encode(response)
 }
