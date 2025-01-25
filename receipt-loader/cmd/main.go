@@ -1,13 +1,10 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger" // подключаем Swagger
-	"log"
+	"fmt"
+	swagger "github.com/swaggo/http-swagger" // подключаем Swagger
 	_ "receipt-loader/docs"
-	"receipt-loader/internal/db"
-	"receipt-loader/internal/handlers"
+	"receipt-loader/internal/app"
 )
 
 // @title Receipt Hub API
@@ -16,22 +13,25 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
-	// Подключение к БД
-	dsn := "postgres://postgres@localhost:5432/receipts"
-	database := db.Connect(dsn)
+	app := app.NewApp()
+	err := app.Config.Load(".env")
 
-	// Инициализация роутера
-	router := gin.Default()
+	if err != nil {
+		panic(err)
+	}
 
-	// Включаем Swagger UI
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	err = app.Setup()
+	if err != nil {
+		panic(err)
+	}
 
-	// Регистрация маршрутов
-	handlers.SetupRoutes(router, database)
+	// Настройка маршрутов Swagger UI
+	app.Router.PathPrefix("/swagger/").Handler(swagger.WrapHandler)
 
-	// Запуск сервера
-	log.Println("Server running on :8080")
-	if err := router.Run(":8080"); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	fmt.Println("Starting is running.")
+
+	err = app.Run()
+	if err != nil {
+		panic(err)
 	}
 }
